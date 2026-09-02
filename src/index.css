@@ -1,0 +1,175 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #090D16;
+  --bg-panel: #111827;
+  --accent-nominal: #10B981;
+  --accent-warning: #F59E0B;
+  --accent-critical: #EF4444;
+  --text-primary: #F9FAFB;
+  --text-secondary: #9CA3AF;
+  --border: #1F2937;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #374151 #111827;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #111827;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 3px;
+}
+
+body {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  background: var(--bg-primary);
+  overflow-x: hidden;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Panel glass effect */
+.panel {
+  @apply bg-space-700/80 border border-space-600/50 rounded-lg backdrop-blur-sm;
+}
+
+.panel-header {
+  @apply px-4 py-2.5 border-b border-space-600/50 flex items-center justify-between;
+}
+
+.panel-body {
+  @apply p-4;
+}
+
+/* Glow effects */
+.glow-nominal {
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3), inset 0 0 12px rgba(16, 185, 129, 0.05);
+}
+
+.glow-warning {
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3), inset 0 0 12px rgba(245, 158, 11, 0.05);
+}
+
+.glow-critical {
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.4), inset 0 0 16px rgba(239, 68, 68, 0.08);
+}
+
+/* Pulsing critical badge */
+@keyframes critical-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.8); }
+}
+
+.critical-pulse {
+  animation: critical-pulse 1.5s ease-in-out infinite;
+}
+
+/* Status indicator dot */
+.status-dot {
+  @apply w-2 h-2 rounded-full;
+}
+
+.status-dot-nominal { @apply bg-nominal; }
+.status-dot-warning { @apply bg-warning; }
+.status-dot-critical { @apply bg-critical; }
+
+/* Scenario button styles */
+.scenario-btn {
+  @apply px-4 py-2 rounded-md font-medium text-sm transition-all duration-200 border;
+}
+
+.scenario-btn:hover {
+  @apply scale-105;
+}
+
+.scenario-btn-active {
+  @apply ring-2 ring-offset-1 ring-offset-space-900;
+}
+
+/* Animated scan line overlay */
+.scan-line-overlay {
+  position: relative;
+  overflow: hidden;
+}
+
+.scan-line-overlay::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.3), transparent);
+  animation: scan-line 4s linear infinite;
+}
+
+@keyframes scan-line {
+  0% { top: -2px; }
+  100% { top: 100%; }
+}
+
+/* Table styles */
+.data-table {
+  @apply w-full text-sm;
+}
+
+.data-table th {
+  @apply text-left px-3 py-2 text-gray-400 font-medium text-xs uppercase tracking-wider border-b border-space-600/50;
+}
+
+.data-table td {
+  @apply px-3 py-2.5 border-b border-space-600/30;
+}
+
+.data-table tr:hover td {
+  @apply bg-space-600/20;
+}
+
+/* Badge */
+.badge {
+  @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+}
+
+.badge-nominal { @apply bg-nominal/20 text-nominal; }
+.badge-warning { @apply bg-warning/20 text-warning; }
+.badge-critical { @apply bg-critical/20 text-critical; }
+.badge-info { @apply bg-accent-blue/20 text-accent-blue; }
+
+/* Recharts overrides for dark theme */
+.recharts-cartesian-grid line {
+  stroke: #1F2937 !important;
+}
+
+.recharts-text {
+  fill: #9CA3AF !important;
+  font-size: 11px !important;
+}
+
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background-color: #111827 !important;
+  border: 1px solid #1F2937 !important;
+  border-radius: 8px !important;
+}
+
+/* Mission report modal */
+.modal-overlay {
+  @apply fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center;
+}
+
+.modal-content {
+  @apply bg-space-700 border border-space-600 rounded-xl max-w-3xl w-full mx-4 max-h-[85vh] overflow-y-auto;
+}
