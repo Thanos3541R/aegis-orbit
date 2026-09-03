@@ -65,8 +65,12 @@ export function propagateElements(elements: OrbitalElements, dt: number): Orbita
   // Mean motion
   const n = Math.sqrt(EARTH_MU / Math.pow(a, 3));
   
-  // Convert true anomaly to eccentric anomaly
-  const E0 = Math.acos((e + Math.cos(elements.trueAnomaly)) / (1 + e * Math.cos(elements.trueAnomaly))) * Math.sign(Math.sin(elements.trueAnomaly));
+  // Convert true anomaly to eccentric anomaly (numerically stable half-angle atan2 formulation)
+  const v0 = elements.trueAnomaly;
+  const E0 = 2 * Math.atan2(
+    Math.sqrt(1 - e) * Math.sin(v0 / 2),
+    Math.sqrt(1 + e) * Math.cos(v0 / 2)
+  );
   
   // Convert eccentric anomaly to mean anomaly
   const M0 = E0 - e * Math.sin(E0);
@@ -93,11 +97,12 @@ export function propagateElements(elements: OrbitalElements, dt: number): Orbita
   raan += raanDot * dt;
   argP += argPDot * dt;
 
+  const TWO_PI = 2 * Math.PI;
   return {
     ...elements,
-    trueAnomaly: v,
-    raan: (raan + 2 * Math.PI) % (2 * Math.PI),
-    argOfPerigee: (argP + 2 * Math.PI) % (2 * Math.PI),
+    trueAnomaly: ((v % TWO_PI) + TWO_PI) % TWO_PI,
+    raan: ((raan % TWO_PI) + TWO_PI) % TWO_PI,
+    argOfPerigee: ((argP % TWO_PI) + TWO_PI) % TWO_PI,
   };
 }
 

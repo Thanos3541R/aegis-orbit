@@ -254,7 +254,7 @@ export interface AppState {
   activateScenario: (id: ScenarioId) => void;
   resetSimulation: () => void;
   tick: (dt: number) => void;
-  executeManeuver: (optionId: string) => void;
+  executeManeuver: (optionOrId: string | CAMOption) => void;
   setCameraTarget: (target: 'overview' | 'aegis1' | 'conjunction' | null) => void;
   setShowMissionReport: (show: boolean) => void;
   toggleSound: () => void;

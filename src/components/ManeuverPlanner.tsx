@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { Rocket, Fuel, Target, Shield, CheckCircle } from 'lucide-react';
 import { ParetoSlider } from './ParetoSlider';
+import type { CAMOption } from '../types';
 
 export const ManeuverPlanner: React.FC = () => {
   const { camOptions, maneuverResult, executeManeuver, conjunctions } = useStore();
@@ -129,9 +130,20 @@ export const ManeuverPlanner: React.FC = () => {
               <ParetoSlider 
                 conjunction={conjunctions[0]} 
                 onCommitBurn={(point) => {
-                  if (camOptions.length > 0) {
-                    executeManeuver(camOptions[0].id);
-                  }
+                  const customOption: CAMOption = {
+                    id: `pareto-${Date.now()}`,
+                    label: `Pareto Burn (${point.riskTolerance.toExponential(1)} Risk)`,
+                    description: `Operator-selected burn: ${point.deltaV.toFixed(2)} m/s, ~${point.fuelCostGrams.toFixed(0)}g propellant`,
+                    burnDirection: 'along-track',
+                    deltaV: point.deltaV,
+                    fuelCost: point.fuelCostGrams,
+                    postManeuverPc: point.riskTolerance,
+                    orbitAltitudeChange: point.deltaV * 2.1,
+                    separationRate: 15.0,
+                    constellationLifetimeImpact: `-${point.missionLifetimeLossDays.toFixed(1)} mission days`,
+                    payloadBlackoutMinutes: 4.0
+                  };
+                  executeManeuver(customOption);
                 }} 
               />
             )}

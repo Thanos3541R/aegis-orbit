@@ -4,7 +4,7 @@
 // All existing components importing useStore continue operating without changes.
 
 import { create } from 'zustand';
-import type { AppState, ScenarioId } from '../types';
+import type { AppState, ScenarioId, CAMOption } from '../types';
 import { createConstellationSatellites, createDebrisField } from '../engine/scenarios';
 import { propagateElements, elementsToECI } from '../engine/orbitalMechanics';
 import { generateTelemetrySample, detectAnomaly, calculateAnomalyScore } from '../engine/telemetrySimulator';
@@ -13,12 +13,15 @@ import { generateCAMOptions, executeCAM } from '../engine/camPlanner';
 import { useTelemetryStore } from './useTelemetryStore';
 import { useConjunctionStore } from './useConjunctionStore';
 
+const initialSatellites = createConstellationSatellites();
+const initialDebris = createDebrisField(initialSatellites[0]);
+
 export const useStore = create<AppState>((set, get) => ({
   activeScenario: null,
   simulationTime: 0,
   isRunning: true,
-  satellites: createConstellationSatellites(),
-  debris: createDebrisField(),
+  satellites: initialSatellites,
+  debris: initialDebris,
   telemetryHistory: [],
   currentTelemetry: null,
   anomalies: [],
@@ -69,9 +72,10 @@ export const useStore = create<AppState>((set, get) => ({
         useConjunctionStore.getState().setManeuverOptions(options);
       }
     } else {
+      const resetSatellites = createConstellationSatellites();
       set({
-        satellites: createConstellationSatellites(),
-        debris: createDebrisField(),
+        satellites: resetSatellites,
+        debris: createDebrisField(resetSatellites[0]),
         cameraTarget: 'overview'
       });
     }
@@ -142,9 +146,11 @@ export const useStore = create<AppState>((set, get) => ({
     });
   },
 
-  executeManeuver: (optionId: string) => {
+  executeManeuver: (optionOrId: string | CAMOption) => {
     set((state) => {
-      const option = state.camOptions.find(o => o.id === optionId);
+      const option = typeof optionOrId === 'string'
+        ? state.camOptions.find(o => o.id === optionOrId)
+        : optionOrId;
       if (!option || state.conjunctions.length === 0) return state;
 
       const maneuverResult = executeCAM(option, state.conjunctions[0]);
