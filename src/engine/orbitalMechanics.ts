@@ -113,7 +113,8 @@ export function eciToRIC(refPos: Vec3, refVel: Vec3, targetPos: Vec3): Vec3 {
     z: refPos.x * refVel.y - refPos.y * refVel.x
   };
   const cMag = Math.sqrt(c.x * c.x + c.y * c.y + c.z * c.z);
-  const cHat = { x: c.x / cMag, y: c.y / cMag, z: c.z / cMag };
+  const cMagGuarded = Math.max(cMag, 1e-8);
+  const cHat = { x: c.x / cMagGuarded, y: c.y / cMagGuarded, z: c.z / cMagGuarded };
 
   // I vector (In-track)
   const iHat = {

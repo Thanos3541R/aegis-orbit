@@ -1,7 +1,8 @@
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Stars } from '@react-three/drei';
+import { OrbitControls, Stars, Html } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
+import * as THREE from 'three';
 import { useStore } from '../store/useStore';
 import { Earth } from './Earth';
 import { OrbitPath } from './OrbitPath';
@@ -12,6 +13,46 @@ import { CameraController } from './CameraController';
 import { TargetTelemetryOverlay } from './TargetTelemetryOverlay';
 import type { AppState } from '../types';
 
+const RICTriad: React.FC<{ position: [number, number, number] }> = ({ position }) => {
+  const lineR = useMemo(() => {
+    const geom = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(1.5, 0, 0)
+    ]);
+    const mat = new THREE.LineBasicMaterial({ color: 0xffff00 });
+    return new THREE.Line(geom, mat);
+  }, []);
+
+  const lineI = useMemo(() => {
+    const geom = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0, 1.5, 0)
+    ]);
+    const mat = new THREE.LineBasicMaterial({ color: 0x00ffff });
+    return new THREE.Line(geom, mat);
+  }, []);
+
+  const lineC = useMemo(() => {
+    const geom = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0, 0, 1.5)
+    ]);
+    const mat = new THREE.LineBasicMaterial({ color: 0xff00ff });
+    return new THREE.Line(geom, mat);
+  }, []);
+
+  return (
+    <group position={position}>
+      <primitive object={lineR} />
+      <primitive object={lineI} />
+      <primitive object={lineC} />
+      <Html position={[1.5, 0, 0]} style={{ color: 'yellow', fontSize: '10px' }} distanceFactor={undefined}>R</Html>
+      <Html position={[0, 1.5, 0]} style={{ color: 'cyan', fontSize: '10px' }} distanceFactor={undefined}>I</Html>
+      <Html position={[0, 0, 1.5]} style={{ color: 'magenta', fontSize: '10px' }} distanceFactor={undefined}>C</Html>
+    </group>
+  );
+};
+
 export const OrbitalView3D: React.FC = () => {
   const satellites = useStore((state: AppState) => state.satellites);
   const debris = useStore((state: AppState) => state.debris);
@@ -21,6 +62,9 @@ export const OrbitalView3D: React.FC = () => {
 
   const controlsRef = useRef<OrbitControlsImpl>(null);
   const activeConjunction = conjunctions.find((c) => c.active);
+
+  const primarySat = activeConjunction ? satellites.find(s => s.id === activeConjunction.primaryId) : null;
+  const showTriad = Boolean(activeConjunction && (activeScenario === 'A' || activeScenario === 'C') && primarySat);
 
   return (
     <div className="relative w-full h-full select-none">
@@ -77,6 +121,11 @@ export const OrbitalView3D: React.FC = () => {
             conjunction={activeConjunction}
             satellites={[...satellites, ...debris]}
           />
+        )}
+        
+        {/* RIC Triad Visualization */}
+        {showTriad && primarySat && (
+          <RICTriad position={[primarySat.position.x / 1000, primarySat.position.y / 1000, primarySat.position.z / 1000]} />
         )}
 
         {/* Orbit Controls */}

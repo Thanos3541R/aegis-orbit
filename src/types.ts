@@ -135,37 +135,121 @@ export interface ManeuverResult {
   message: string;
 }
 
-// ── Store ───────────────────────────────────────────────────────────────────
+// ── CCSDS 508.0-B-1 Conjunction Data Message ────────────────────────────────
+
+export type CDMFormat = 'JSON' | 'KVN';
+
+export interface CDMMsg {
+  CCSDS_CDM_VERS: string;
+  CREATION_DATE: string;
+  ORIGINATOR: string;
+  MESSAGE_ID: string;
+  TCA: string;
+  MISS_DISTANCE: string;          // meters
+  RELATIVE_SPEED: string;         // km/s
+  COLLISION_PROBABILITY: string;
+  EMERGENCY_REPORTABLE: string;
+  OBJECT1_DESIGNATOR: string;
+  OBJECT1_NAME: string;
+  OBJECT1_CATALOG_NAME: string;
+  OBJECT1_OBJECT_TYPE: string;
+  OBJECT1_MANEUVERABLE: string;
+  OBJECT2_DESIGNATOR: string;
+  OBJECT2_NAME: string;
+  OBJECT2_CATALOG_NAME: string;
+  OBJECT2_OBJECT_TYPE: string;
+  OBJECT2_MANEUVERABLE: string;
+  COVARIANCE_METHOD: string;
+  COVARIANCE_RTN_OBJECT1: number[];   // 6-element upper-triangle
+  COVARIANCE_RTN_OBJECT2: number[];
+}
+
+// ── Pareto CAM Trade-Off ────────────────────────────────────────────────────
+
+export interface ParetoPoint {
+  riskTolerance: number;     // 1e-5 to 1e-8
+  deltaV: number;            // m/s
+  fuelCostGrams: number;     // g
+  missionLifetimeLossDays: number;
+}
+
+// ── Decoupled Store Interfaces ──────────────────────────────────────────────
+
+export interface TelemetryStoreState {
+  // State
+  rollingTelemetry: TelemetrySample[];  // last 120 samples
+  anomalyScore: number;                 // current Mahalanobis D_M^2
+  activeAnomalies: AnomalyEvent[];
+  anomalyDetectionActive: boolean;
+
+  // Actions
+  pushSample: (sample: TelemetrySample) => void;
+  setAnomalies: (anomalies: AnomalyEvent[]) => void;
+  addAnomaly: (anomaly: AnomalyEvent) => void;
+  setAnomalyDetectionActive: (active: boolean) => void;
+  setAnomalyScore: (score: number) => void;
+  resetTelemetry: () => void;
+}
+
+export interface ManeuverState {
+  computedOptions: CAMOption[];
+  selectedOptionIndex: number;
+  executed: boolean;
+  result: ManeuverResult | null;
+}
+
+export interface ConjunctionStoreState {
+  // State
+  activeScenario: ScenarioId;
+  selectedSatId: string;
+  conjunctions: ConjunctionEvent[];
+  cdmData: CDMMsg | null;
+  maneuverState: ManeuverState;
+  soundEnabled: boolean;
+
+  // Actions
+  triggerScenario: (id: ScenarioId) => void;
+  executeManeuver: (idx: number) => void;
+  resetAll: () => void;
+  toggleSound: () => void;
+  setConjunctions: (conjunctions: ConjunctionEvent[]) => void;
+  setCdmData: (cdm: CDMMsg | null) => void;
+  setManeuverOptions: (options: CAMOption[]) => void;
+  setSelectedSatId: (id: string) => void;
+}
+
+// ── Unified Store (Backwards-Compatible Orchestrator) ───────────────────────
 
 export interface AppState {
   // Scenario
   activeScenario: ScenarioId;
   simulationTime: number;
   isRunning: boolean;
-  
+
   // Orbital
   satellites: Satellite[];
   debris: Satellite[];
-  
+
   // Telemetry
   telemetryHistory: TelemetrySample[];
   currentTelemetry: TelemetrySample | null;
-  
+
   // Anomaly
   anomalies: AnomalyEvent[];
   anomalyDetectionActive: boolean;
-  
+
   // Conjunction
   conjunctions: ConjunctionEvent[];
-  
+
   // Maneuver
   camOptions: CAMOption[];
   maneuverResult: ManeuverResult | null;
-  
+
   // UI
   cameraTarget: 'overview' | 'aegis1' | 'conjunction' | null;
   showMissionReport: boolean;
-  
+  soundEnabled: boolean;
+
   // Actions
   activateScenario: (id: ScenarioId) => void;
   resetSimulation: () => void;
@@ -173,4 +257,5 @@ export interface AppState {
   executeManeuver: (optionId: string) => void;
   setCameraTarget: (target: 'overview' | 'aegis1' | 'conjunction' | null) => void;
   setShowMissionReport: (show: boolean) => void;
+  toggleSound: () => void;
 }

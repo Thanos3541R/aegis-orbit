@@ -71,7 +71,7 @@ export function calculateAnomalyScore(
   if (history.length < 2) return { score: 0, channelScores: {} };
   
   const channelScores: Record<string, number> = {};
-  let maxScore = 0;
+  let sumZ2 = 0;
 
   for (const channel of TELEMETRY_CHANNELS) {
     const values = history.map(h => h[channel.id] as number);
@@ -81,10 +81,11 @@ export function calculateAnomalyScore(
 
     const zScore = Math.abs((sample[channel.id] as number) - mean) / stddev;
     channelScores[channel.id] = zScore;
-    if (zScore > maxScore) maxScore = zScore;
+    sumZ2 += zScore * zScore;
   }
-
-  return { score: maxScore, channelScores };
+  
+  const combinedScore = Math.sqrt(sumZ2);
+  return { score: combinedScore, channelScores };
 }
 
 export function detectAnomaly(
@@ -97,9 +98,13 @@ export function detectAnomaly(
   const { score, channelScores } = calculateAnomalyScore(sample, history.slice(-60));
   
   if (score > 3) {
-    const wheelSigma = channelScores['wheelSpeed2']?.toFixed(1) || '0.0';
-    const voltSigma = channelScores['busVoltage']?.toFixed(1) || '0.0';
-    const rootCause = `Anomaly driven by ${wheelSigma}σ divergence in Wheel 2 Speed vs Bus Voltage`;
+    // Find the top 2 deviating channels by sigma
+    const sortedChannels = Object.entries(channelScores).sort((a, b) => b[1] - a[1]);
+    const topChannel = TELEMETRY_CHANNELS.find(c => c.id === sortedChannels[0][0])?.name || sortedChannels[0][0];
+    const secondChannel = TELEMETRY_CHANNELS.find(c => c.id === sortedChannels[1][0])?.name || sortedChannels[1][0];
+    const topSigma = sortedChannels[0][1].toFixed(1);
+
+    const rootCause = `Anomaly driven by ${topSigma}σ divergence in ${topChannel} correlated with ${secondChannel}`;
     
     return {
       id: `anomaly-${time.toFixed(2)}`,

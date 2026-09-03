@@ -14,11 +14,11 @@ export function screenConjunctions(
 ): ConjunctionEvent[] {
   const events: ConjunctionEvent[] = [];
 
-  // Always generate the high-priority conjunction
+  // conj-1
   events.push({
     id: 'conj-1',
     primaryId: 'aegis-1',
-    primaryName: 'Aegis-1',
+    primaryName: 'Aegis-1 (Cartosat-3)',
     secondaryId: 'debris-cosmos-2251',
     secondaryName: 'Cosmos-2251 Debris',
     tca: Math.max(0, 2700 - simTime),
@@ -37,13 +37,13 @@ export function screenConjunctions(
     active: true,
   });
 
-  // Background conjunction 2
+  // conj-2
   events.push({
     id: 'conj-2',
-    primaryId: 'aegis-3',
-    primaryName: 'Aegis-3',
+    primaryId: 'eos-04',
+    primaryName: 'EOS-04 Replica',
     secondaryId: 'debris-10',
-    secondaryName: 'Debris-10',
+    secondaryName: 'FY-1C Debris-10',
     tca: Math.max(0, 15000 - simTime),
     missDistance: 3200,
     collisionProbability: 1.5e-6,
@@ -56,11 +56,11 @@ export function screenConjunctions(
     active: true,
   });
 
-  // Background conjunction 3
+  // conj-3
   events.push({
     id: 'conj-3',
-    primaryId: 'aegis-4',
-    primaryName: 'Aegis-4',
+    primaryId: 'aegis-relay',
+    primaryName: 'Aegis-Relay',
     secondaryId: 'debris-42',
     secondaryName: 'Debris-42',
     tca: Math.max(0, 43200 - simTime),
@@ -75,11 +75,11 @@ export function screenConjunctions(
     active: true,
   });
 
-  // Background conjunction 4
+  // conj-4
   events.push({
     id: 'conj-4',
-    primaryId: 'aegis-2',
-    primaryName: 'Aegis-2',
+    primaryId: 'cartosat-3',
+    primaryName: 'Cartosat-3 Replica',
     secondaryId: 'debris-27',
     secondaryName: 'Debris-27',
     tca: Math.max(0, 72000 - simTime),
@@ -104,7 +104,23 @@ export function calculatePc(
 ): number {
   const u = (objectRadius * objectRadius) / combinedCovariance;
   const v = (missDistance * missDistance) / combinedCovariance;
-  return Math.exp(-v / 2) * (1 - Math.exp(-u / 2));
+  
+  let sumTerm1 = 0;
+  for (let m = 0; m <= 3; m++) {
+    let sumTerm2 = 0;
+    for (let k = 0; k <= m; k++) {
+      let kFact = 1;
+      for (let i = 1; i <= k; i++) kFact *= i;
+      sumTerm2 += Math.pow(u, k) / (Math.pow(2, k) * kFact);
+    }
+    
+    let mFact = 1;
+    for (let i = 1; i <= m; i++) mFact *= i;
+    
+    sumTerm1 += (Math.pow(v, m) / (Math.pow(2, m) * mFact)) * (1 - Math.exp(-u / 2) * sumTerm2);
+  }
+  
+  return Math.exp(-v / 2) * sumTerm1;
 }
 
 export function generateCDM(
@@ -117,14 +133,14 @@ export function generateCDM(
   return {
     CCSDS_CDM_VERS: '1.0',
     CREATION_DATE: new Date().toISOString(),
-    ORIGINATOR: 'AegisOrbit SSA System',
+    ORIGINATOR: 'IS4OM_NETRA_AEGIS',
     MESSAGE_FOR: conjunction.primaryName,
     MESSAGE_ID: `CDM-${conjunction.id}-${Date.now()}`,
     TCA: `T-${Math.floor(conjunction.tca / 60)}min ${Math.floor(conjunction.tca % 60)}s`,
     MISS_DISTANCE: `${conjunction.missDistance} m`,
     RELATIVE_SPEED: `${conjunction.relativeVelocity} km/s`,
     COLLISION_PROBABILITY: conjunction.collisionProbability,
-    COLLISION_PROBABILITY_METHOD: "FOSTER-1992",
+    COLLISION_PROBABILITY_METHOD: "CHAN-1997",
     OBJECT1: {
       OBJECT_DESIGNATOR: primary?.id || conjunction.primaryId,
       OBJECT_NAME: conjunction.primaryName,
