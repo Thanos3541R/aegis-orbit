@@ -245,17 +245,21 @@ export interface AppState {
   camOptions: CAMOption[];
   maneuverResult: ManeuverResult | null;
 
-  // UI
-  cameraTarget: 'overview' | 'aegis1' | 'conjunction' | null;
+  // UI & Playback
+  cameraTarget: 'overview' | 'aegis1' | 'conjunction' | 'india' | null;
   showMissionReport: boolean;
   soundEnabled: boolean;
+  simSpeed: number;
+  isPaused: boolean;
 
   // Actions
   activateScenario: (id: ScenarioId) => void;
   resetSimulation: () => void;
   tick: (dt: number) => void;
   executeManeuver: (optionOrId: string | CAMOption) => void;
-  setCameraTarget: (target: 'overview' | 'aegis1' | 'conjunction' | null) => void;
+  setCameraTarget: (target: 'overview' | 'aegis1' | 'conjunction' | 'india' | null) => void;
   setShowMissionReport: (show: boolean) => void;
   toggleSound: () => void;
+  setSimSpeed: (speed: number) => void;
+  togglePause: () => void;
 }

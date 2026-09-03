@@ -1,6 +1,6 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
-import { Globe, Satellite, AlertTriangle, Eye } from 'lucide-react';
+import { Globe, Satellite, AlertTriangle, Eye, Compass } from 'lucide-react';
 import type { AppState } from '../types';
 
 export const CameraControls: React.FC = () => {
@@ -10,12 +10,14 @@ export const CameraControls: React.FC = () => {
   const activeConjunction = conjunctions.find((c) => c.active);
 
   return (
-    <div className="absolute bottom-4 left-4 z-10 bg-space-900/90 backdrop-blur-md border border-space-600/80 rounded-xl p-2 shadow-2xl flex flex-col gap-1.5 min-w-[170px]">
+    <div className="absolute bottom-4 left-4 z-10 bg-space-900/90 backdrop-blur-md border border-space-600/80 rounded-xl p-2 shadow-2xl flex flex-col gap-1.5 min-w-[175px]">
       <div className="text-[10px] uppercase font-mono text-gray-400 px-2 py-0.5 border-b border-space-700/60 flex items-center justify-between">
         <span className="flex items-center gap-1 font-bold">
           <Eye size={12} className="text-cyan-400" /> CAMERA HUD
         </span>
-        <span className="text-[9px] text-cyan-400 font-bold">3D TRACK</span>
+        <span className="text-[9px] text-cyan-400 font-bold">
+          {cameraTarget ? cameraTarget.toUpperCase() : 'FREE ORBIT'}
+        </span>
       </div>
 
       {/* Button 1: Constellation Overview */}
@@ -31,7 +33,21 @@ export const CameraControls: React.FC = () => {
         <span>Constellation</span>
       </button>
 
-      {/* Button 2: Aegis-1 3D Model Close-Up */}
+      {/* Button 2: India / ISRO Ground Track Focus */}
+      <button
+        onClick={() => setCameraTarget('india')}
+        className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+          cameraTarget === 'india'
+            ? 'bg-space-700 text-amber-300 border border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.3)]'
+            : 'text-gray-300 hover:bg-space-800 hover:text-white border border-transparent'
+        }`}
+        title="Focus view on Indian Space Stations (ISTRAC, Sriharikota)"
+      >
+        <Compass size={15} className={cameraTarget === 'india' ? 'text-amber-400' : 'text-gray-400'} />
+        <span>🇮🇳 ISRO / India</span>
+      </button>
+
+      {/* Button 3: Aegis-1 3D Model Close-Up */}
       <button
         onClick={() => setCameraTarget('aegis1')}
         className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
@@ -44,7 +60,7 @@ export const CameraControls: React.FC = () => {
         <span>Aegis-1 Model</span>
       </button>
 
-      {/* Button 3: Conjunction Encounter */}
+      {/* Button 4: Conjunction Encounter */}
       <button
         onClick={() => setCameraTarget('conjunction')}
         disabled={!activeConjunction}

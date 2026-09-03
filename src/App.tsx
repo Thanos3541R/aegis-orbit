@@ -15,9 +15,13 @@ export default function App() {
 
   const animate = (time: number) => {
     if (lastTimeRef.current !== 0) {
-      let dt = (time - lastTimeRef.current) / 1000;
-      if (dt > 0.05) dt = 0.05; 
-      store.tick(dt);
+      const state = useStore.getState();
+      if (!state.isPaused) {
+        let dt = (time - lastTimeRef.current) / 1000;
+        if (dt > 0.05) dt = 0.05;
+        const speed = state.simSpeed || 1;
+        state.tick(dt * speed);
+      }
     }
     lastTimeRef.current = time;
     requestRef.current = requestAnimationFrame(animate);

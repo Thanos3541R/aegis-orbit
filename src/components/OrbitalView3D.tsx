@@ -128,15 +128,17 @@ export const OrbitalView3D: React.FC = () => {
           <RICTriad position={[primarySat.position.x / 1000, primarySat.position.y / 1000, primarySat.position.z / 1000]} />
         )}
 
-        {/* Orbit Controls */}
+        {/* Orbit Controls with Ultra-Smooth Fluid Response */}
         <OrbitControls
           ref={controlsRef}
           enableDamping
-          dampingFactor={0.08}
-          minDistance={1.2}
-          maxDistance={90}
-          rotateSpeed={0.8}
-          zoomSpeed={1.0}
+          dampingFactor={0.05}
+          minDistance={1.0}
+          maxDistance={95}
+          rotateSpeed={1.4}
+          zoomSpeed={1.2}
+          panSpeed={1.2}
+          screenSpacePanning={true}
         />
       </Canvas>
 

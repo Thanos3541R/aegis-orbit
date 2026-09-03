@@ -32,6 +32,8 @@ export const useStore = create<AppState>((set, get) => ({
   cameraTarget: 'overview',
   showMissionReport: false,
   soundEnabled: true,
+  simSpeed: 1,
+  isPaused: false,
 
   activateScenario: (id: ScenarioId | null) => {
     // Reset telemetry store
@@ -178,5 +180,13 @@ export const useStore = create<AppState>((set, get) => ({
     const newState = !get().soundEnabled;
     set({ soundEnabled: newState });
     useConjunctionStore.getState().toggleSound();
+  },
+
+  setSimSpeed: (speed: number) => {
+    set({ simSpeed: speed });
+  },
+
+  togglePause: () => {
+    set((state) => ({ isPaused: !state.isPaused }));
   },
 }));

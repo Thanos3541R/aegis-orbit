@@ -12,6 +12,7 @@ interface CameraControllerProps {
 export const CameraController: React.FC<CameraControllerProps> = ({ controlsRef }) => {
   const { camera } = useThree();
   const cameraTarget = useStore((state: AppState) => state.cameraTarget);
+  const setCameraTarget = useStore((state: AppState) => state.setCameraTarget);
   const satellites = useStore((state: AppState) => state.satellites);
   const conjunctions = useStore((state: AppState) => state.conjunctions);
 
@@ -24,9 +25,29 @@ export const CameraController: React.FC<CameraControllerProps> = ({ controlsRef 
   const destCamPos = useRef(new THREE.Vector3());
   const destTargetPos = useRef(new THREE.Vector3());
 
+  // Seamless User Drag Detection: When user manually interacts with OrbitControls,
+  // cancel automatic transitions and allow completely free camera rotation
+  useEffect(() => {
+    const controls = controlsRef.current;
+    if (!controls) return;
+
+    const onStart = () => {
+      isTransitioningRef.current = false;
+      const currentTarget = useStore.getState().cameraTarget;
+      if (currentTarget === 'aegis1' || currentTarget === 'conjunction' || currentTarget === 'india') {
+        setCameraTarget(null);
+      }
+    };
+
+    controls.addEventListener('start', onStart);
+    return () => {
+      controls.removeEventListener('start', onStart);
+    };
+  }, [controlsRef, setCameraTarget]);
+
   // Trigger smooth transition whenever cameraTarget changes
   useEffect(() => {
-    if (cameraTarget !== prevTargetRef.current) {
+    if (cameraTarget && cameraTarget !== prevTargetRef.current) {
       prevTargetRef.current = cameraTarget;
       isTransitioningRef.current = true;
       transitionProgressRef.current = 0;
@@ -61,14 +82,27 @@ export const CameraController: React.FC<CameraControllerProps> = ({ controlsRef 
         );
         destTargetPos.current.copy(satPos);
 
-        // Wider perspective framing the conflict cone
+        // Wider perspective framing the conflict geometry
         const radialOut = satPos.clone().normalize();
         destCamPos.current.copy(satPos).add(radialOut.multiplyScalar(3.8)).add(new THREE.Vector3(1.0, 1.2, 1.0));
+      } else if (cameraTarget === 'india') {
+        // Direct Nadir Focus over Indian Subcontinent & ISTRAC
+        const latRad = 14.0 * (Math.PI / 180);
+        const lonRad = 79.0 * (Math.PI / 180);
+        const r = 6.371;
+        const targetX = r * Math.cos(latRad) * Math.cos(lonRad);
+        const targetY = r * Math.sin(latRad);
+        const targetZ = r * Math.cos(latRad) * Math.sin(lonRad);
+        destTargetPos.current.set(targetX * 0.4, targetY * 0.4, targetZ * 0.4);
+        const normal = new THREE.Vector3(targetX, targetY, targetZ).normalize();
+        destCamPos.current.copy(normal).multiplyScalar(14.0);
       } else {
         // Constellation Overview
         destTargetPos.current.set(0, 0, 0);
         destCamPos.current.set(0, 8, 22);
       }
+    } else if (!cameraTarget) {
+      prevTargetRef.current = null;
     }
   }, [cameraTarget, satellites, conjunctions, camera, controlsRef]);
 
@@ -78,7 +112,7 @@ export const CameraController: React.FC<CameraControllerProps> = ({ controlsRef 
 
     if (isTransitioningRef.current) {
       // Smooth cubic ease-out transition
-      transitionProgressRef.current += delta * 1.8;
+      transitionProgressRef.current += delta * 2.2;
       const t = Math.min(1, transitionProgressRef.current);
       const ease = 1 - Math.pow(1 - t, 3);
 
